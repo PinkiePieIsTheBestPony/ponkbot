@@ -114,34 +114,31 @@ function post(tagsArray, id, sauce, url) {
     fetchImage(url, status);
 }
 
-function main() {
-    nodeCron.job(
-        '0 0,30 * * * *',
-        function() {
-            getImage().then(({images}) => {
-                const result = images[0]
-                const url = result["viewUrl"];
-                const id = result["id"];
-                const tagsArray = result["tags"];
-                const sauce = result["sourceUrl"];
-    
-                if (sauce == null || sauce == '') {
-                    post(tagsArray, id, sauce, url)
-                }
-                else {
-                    fetch(sauce).then(res => {
-                        const notRetweetable = checkSource(res, sauce);
-                        if (notRetweetable) {
-                            post(tagsArray, id, sauce, url);
-                        }
-                    });
-                }
-            })
-            .catch(error => console.log(error));
-        },
-        null,
-        true
-    )
-}
+//main
+nodeCron.job(
+    '0 0,30 * * * *',
+    function() {
+        getImage().then(({images}) => {
+            const result = images[0]
+            const url = result["viewUrl"];
+            const id = result["id"];
+            const tagsArray = result["tags"];
+            const sauce = result["sourceUrl"];
 
-main();
+            if (sauce == null || sauce == '') {
+                post(tagsArray, id, sauce, url)
+            }
+            else {
+                fetch(sauce).then(res => {
+                    const notRetweetable = checkSource(res, sauce);
+                    if (notRetweetable) {
+                        post(tagsArray, id, sauce, url);
+                    }
+                });
+            }
+        })
+        .catch(error => console.log(error));
+    },
+    null,
+    true
+)
