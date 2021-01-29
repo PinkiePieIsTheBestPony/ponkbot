@@ -19,8 +19,8 @@ function getImage() {
     return dinky({filter: 167482}).search(tagList).random().limit(1);
 }
 
-function fetchImage(url, status) {
-    fetch(url)
+function fetchImage(urlDirect, status) {
+    fetch(urlDirect)
     .then(res => res.buffer())
     .then(buffer => postTweetWithImage(buffer.toString('base64'), status))
     .catch(error => console.error(error))
@@ -76,19 +76,24 @@ function createStatus(id, artists, sauce) {
 
 function postTweetWithImage(image, status) {
     const T = initialiseTwit();
-    T.post('media/upload', { media_data: image }, function (err, data, response) {
-        var mediaIdStr = data.media_id_string
-        var meta_params = { media_id: mediaIdStr, alt_text: { text: "Pinkie Pie" } }
-        T.post('media/metadata/create', meta_params, function (err, data, response) {
-          if (!err) {
-            var params = { status: status, media_ids: [mediaIdStr] }
-            T.post('statuses/update', params, function (err, data, response) {});
-          }
-          else {
-              console.log(err);
-          }
+    if (Buffer.byteLength(image) < 5000000) {
+        T.post('media/upload', { media_data: image }, function (err, data, response) {
+            var mediaIdStr = data.media_id_string
+            var meta_params = { media_id: mediaIdStr, alt_text: { text: "Pinkie Pie" } }
+            T.post('media/metadata/create', meta_params, function (err, data, response) {
+            if (!err) {
+                var params = { status: status, media_ids: [mediaIdStr] }
+                T.post('statuses/update', params, function (err, data, response) {});
+            }
+            else {
+                console.log(err);
+            }
+            });
         });
-    });
+    }
+    else {
+        T.post('statuses/update', { status: status }, function(err, data, response) {})
+    }
 }
 
 function checkSource(res, sauce) {
@@ -108,10 +113,10 @@ function retweetImage(twitterID) {
     T.post('statuses/retweet/:id', {id: twitterID}, function (err, data, response) {})
 }
 
-function post(tagsArray, id, sauce, url) {
+function post(tagsArray, id, sauce, urlDirect) {
     const artists = getArtists(tagsArray);
     const status = createStatus(id, artists, sauce);
-    fetchImage(url, status);
+    fetchImage(urlDirect, status);
 }
 
 //main
@@ -120,13 +125,13 @@ nodeCron.job(
     function() {
         getImage().then(({images}) => {
             const result = images[0]
-            const url = result["viewUrl"];
+            const urlDirect = result["viewUrl"];
             const id = result["id"];
             const tagsArray = result["tags"];
             const sauce = result["sourceUrl"];
 
             if (sauce == null || sauce == '') {
-                post(tagsArray, id, sauce, url)
+                post(tagsArray, id, sauce, urlDirect)
             }
             else {
                 fetch(sauce).then(res => {
