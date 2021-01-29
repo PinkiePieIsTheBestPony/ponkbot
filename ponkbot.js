@@ -15,13 +15,8 @@ function initialiseTwit() {
 }
 
 function getImage() {
-<<<<<<< HEAD
-    const tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:50"];
+    const tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:50", "!irl human"];
     return dinky({filter: 167482}).search(tagList).random().limit(1);
-=======
-    const tagList = ["pinkie pie", "safe", "solo", "!webm"];
-    return dinky({filter: 167482}).search(tagList).minScore(50).random().limit(1);
->>>>>>> b720a87488db5b744ad50776667c20b26d0445e6
 }
 
 function fetchImage(url, status) {
