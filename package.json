@@ -1,0 +1,27 @@
+{
+  "name": "ponk-twit-bot",
+  "version": "1.0.0",
+  "description": "Web application that uses the [Twit](https://github.com/ttezel/twit) and [dinky.js](https://github.com/octet-stream/dinky) node libraries. This application will randomly grab a pinkie pie image every 30 minutes, and post it to Twitter.",
+  "main": "ponkbot.js",
+  "dependencies": {
+    "cron": "^1.8.2",
+    "dinky.js": "^1.0.0",
+    "http": "^0.0.0",
+    "node-fetch": "^2.6.0",
+    "twit": "^2.2.11"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node ponkbot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PinkiePieIsTheBestPony/ponk-twit-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PinkiePieIsTheBestPony/ponk-twit-bot/issues"
+  },
+  "homepage": "https://github.com/PinkiePieIsTheBestPony/ponk-twit-bot#readme"
+}
