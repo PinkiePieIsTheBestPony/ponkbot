@@ -137,7 +137,7 @@ nodeCron.job(
                 fetch(sauce).then(res => {
                     const notRetweetable = checkSource(res, sauce);
                     if (notRetweetable) {
-                        post(tagsArray, id, sauce, url);
+                        post(tagsArray, id, sauce, urlDirect);
                     }
                 });
             }
