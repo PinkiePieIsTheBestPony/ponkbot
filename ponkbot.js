@@ -14,9 +14,13 @@ function initialiseTwit() {
     });
 }
 
-function getImage() {
+function getImageRandom() {
     const tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:50", "!irl human"];
     return dinky({filter: 167482}).search(tagList).random().limit(1);
+}
+
+function getImageSpecific(id) {
+    return dinky({filter: 167482}).getById(id);
 }
 
 function fetchImage(urlDirect, status) {
@@ -110,7 +114,9 @@ function checkSource(res, sauce) {
 
 function retweetImage(twitterID) {
     const T = initialiseTwit();
-    T.post('statuses/retweet/:id', {id: twitterID}, function (err, data, response) {})
+    T.post('statuses/unretweet/:id', {id: twitterID}, function (err, data, response) {
+        T.post('statuses/retweet/:id', {id: twitterID}, function (err, data, response) {})
+    })
 }
 
 function post(tagsArray, id, sauce, urlDirect) {
@@ -119,30 +125,51 @@ function post(tagsArray, id, sauce, urlDirect) {
     fetchImage(urlDirect, status);
 }
 
+function getRandomFollower() {
+    const T = initialiseTwit();
+    T.get('followers/ids', { screen_name: 'Ponkbot1' }, function (err, data, response) {
+        const followers = data.ids;
+        const randNum = Math.floor(Math.random() * followers.length);
+        let randFollowerID = followers[randNum];
+        T.get('users/show', { user_id: randFollowerID }, function (err, data, response) {
+            let userName = data.screen_name;
+            return '.@' + userName;
+        })
+    });
+}
+
 //main
 nodeCron.job(
     '0 0,30 * * * *',
     function() {
-        getImage().then(({images}) => {
-            const result = images[0]
-            const urlDirect = result["viewUrl"];
-            const id = result["id"];
-            const tagsArray = result["tags"];
-            const sauce = result["sourceUrl"];
+        dateObj = new Date()
+        if (dateObj.getDay() == 0 && dateObj.getHour() == 11 && dateObj.getMinutes() == 18) {
+            fetchImage("https://derpicdn.net/img/view/2016/2/15/1089039.gif", getRandomFollower());
+        } else {
+            getImageRandom().then(({images}) => {
+                const result = images[0]
+                const urlDirect = result["viewUrl"];
+                const id = result["id"];
+                const tagsArray = result["tags"];
+                const sauce = result["sourceUrl"];
 
-            if (sauce == null || sauce == '') {
-                post(tagsArray, id, sauce, urlDirect)
-            }
-            else {
-                fetch(sauce).then(res => {
-                    const notRetweetable = checkSource(res, sauce);
-                    if (notRetweetable) {
+                if (sauce == null || sauce == '') {
+                    post(tagsArray, id, sauce, urlDirect)
+                }
+                else {
+                    fetch(sauce).then(res => {
+                        const notRetweetable = checkSource(res, sauce);
+                        if (notRetweetable) {
+                            post(tagsArray, id, sauce, urlDirect);
+                        }
+                    }).catch((error) => {
+                        console.log(error);
                         post(tagsArray, id, sauce, urlDirect);
-                    }
-                });
-            }
-        })
-        .catch(error => console.log(error));
+                    });
+                }
+            })
+            .catch(error => console.log(error));
+        }
     },
     null,
     true
