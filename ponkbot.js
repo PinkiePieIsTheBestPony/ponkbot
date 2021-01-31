@@ -143,7 +143,7 @@ nodeCron.job(
     '0 0,30 * * * *',
     function() {
         dateObj = new Date()
-        if (dateObj.getDay() == 0 && dateObj.getHour() == 11 && dateObj.getMinutes() == 30) {
+        if (dateObj.getDay() == 0 && dateObj.getHours() == 12 && dateObj.getMinutes() == 0) {
             fetchImage("https://derpicdn.net/img/view/2016/2/15/1089039.gif", getRandomFollower());
         } else {
             getImageRandom().then(({images}) => {
