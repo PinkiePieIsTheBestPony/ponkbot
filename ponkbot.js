@@ -1,7 +1,6 @@
-//required node modules
-var Twit = require('twit');
+const Twit = require('twit');
 const fetch = require('node-fetch');
-const dinky = require('dinky.js');
+const {Search} = require('dinky.js');
 const nodeCron = require('cron');
 
 
@@ -14,20 +13,19 @@ function initialiseTwit() {
     });
 }
 
-function getImageRandom() {
+const getImageRandom = async () => {
+    const search = new Search({url: "https://derpibooru.org"});
     const tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:50", "!irl human"];
-    return dinky({filter: 167482}).search(tagList).random().limit(1);
+    search.query(tagList).random().limit(1);
+    
+    const resp = await search.exec({filter: 167482})
+    return resp.images[0]
 }
 
-function getImageSpecific(id) {
-    return dinky({filter: 167482}).getById(id);
-}
-
-function fetchImage(urlDirect, status) {
-    fetch(urlDirect)
-    .then(res => res.buffer())
-    .then(buffer => postTweetWithImage(buffer.toString('base64'), status))
-    .catch(error => console.error(error))
+const fetchImage = async (urlDirect, status) => {
+    const resp = await fetch(urlDirect);
+    const buffer = await resp.buffer();
+    postTweetWithImage(buffer.toString('base64'), status);
 } 
 
 function getArtists(tagsArray) {
@@ -95,9 +93,6 @@ function postTweetWithImage(image, status) {
             });
         });
     }
-    else {
-        T.post('statuses/update', { status: status }, function(err, data, response) {})
-    }
 }
 
 function checkSource(res, sauce) {
@@ -119,56 +114,35 @@ function retweetImage(twitterID) {
     })
 }
 
-function post(tagsArray, id, sauce, urlDirect) {
+const post = async (tagsArray, id, sauce, urlDirect) => {
     const artists = getArtists(tagsArray);
     const status = createStatus(id, artists, sauce);
-    fetchImage(urlDirect, status);
-}
-
-function getRandomFollower() {
-    const T = initialiseTwit();
-    T.get('followers/ids', { screen_name: 'Ponkbot1' }, function (err, data, response) {
-        const followers = data.ids;
-        const randNum = Math.floor(Math.random() * followers.length);
-        let randFollowerID = followers[randNum];
-        T.get('users/show', { user_id: randFollowerID }, function (err, data, response) {
-            let userName = data.screen_name;
-            return '.@' + userName;
-        })
-    });
+    await fetchImage(urlDirect, status);
 }
 
 //main
 nodeCron.job(
-    '0 0,30 * * * *',
-    function() {
-        dateObj = new Date()
-        if (dateObj.getDay() == 0 && dateObj.getHours() == 12 && dateObj.getMinutes() == 0) {
-            fetchImage("https://derpicdn.net/img/view/2016/2/15/1089039.gif", getRandomFollower());
-        } else {
-            getImageRandom().then(({images}) => {
-                const result = images[0]
-                const urlDirect = result["viewUrl"];
-                const id = result["id"];
-                const tagsArray = result["tags"];
-                const sauce = result["sourceUrl"];
+    '0 0/30 * * * *',
+    async function() {
+        try {
+            const image = await getImageRandom();
+            const urlDirect = image.viewUrl;
+            const id = image.id;
+            const tagsArray = image.tags;
+            const sauce = image.sourceUrl;
 
-                if (sauce == null || sauce == '') {
-                    post(tagsArray, id, sauce, urlDirect)
+            if (sauce == null || sauce == '') {
+                post(tagsArray, id, sauce, urlDirect)
+            }
+            else {
+                const resp = await fetch(sauce);
+                const notRetweetable = checkSource(resp, sauce);
+                if (notRetweetable) {
+                    post(tagsArray, id, sauce, urlDirect);
                 }
-                else {
-                    fetch(sauce).then(res => {
-                        const notRetweetable = checkSource(res, sauce);
-                        if (notRetweetable) {
-                            post(tagsArray, id, sauce, urlDirect);
-                        }
-                    }).catch((error) => {
-                        console.log(error);
-                        post(tagsArray, id, sauce, urlDirect);
-                    });
-                }
-            })
-            .catch(error => console.log(error));
+            }
+        } catch (error) {
+            console.error(error);
         }
     },
     null,

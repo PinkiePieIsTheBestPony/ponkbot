@@ -5,9 +5,9 @@
   "main": "ponkbot.js",
   "dependencies": {
     "cron": "^1.8.2",
-    "dinky.js": "^1.0.0",
+    "dinky.js": "^2.0.0-beta.0",
     "http": "^0.0.0",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "twit": "^2.2.11"
   },
   "devDependencies": {},
