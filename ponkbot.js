@@ -15,7 +15,7 @@ function initialiseTwit() {
 
 const getImageRandom = async () => {
     const search = new Search({url: "https://derpibooru.org"});
-    const tagList = ["pinkie pie", "safe", "solo", "!webm", "score.gte:50", "!irl human"];
+    const tagList = ["pinkie pie", "safe", "solo", "!webm", "birthday", "!summary"];
     search.query(tagList).random().limit(1);
     
     const resp = await search.exec({filter: 167482})
